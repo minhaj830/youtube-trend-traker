@@ -1,6 +1,6 @@
 import streamlit as st
 import requests
-from datetime import datetime, timedelta
+from datetime import datetime, timedelta, timezone
 from dateutil import parser
 
 # YouTube API Key Input
@@ -35,10 +35,12 @@ if st.button("Track YouTube Trends"):
                 st.error(f"❌ API Error: {data['error']['message']}")
             else:
                 recent_trends = []
-                now = datetime.utcnow()
+                now = datetime.now(timezone.utc)  # Corrected timezone handling
 
                 for item in data.get("items", []):
                     published_at = parser.parse(item["snippet"]["publishedAt"])
+
+                    # Calculate time difference in minutes
                     time_diff = (now - published_at).total_seconds() / 60
 
                     # Check if video is published within the last 5 minutes
