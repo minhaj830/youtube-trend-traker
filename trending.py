@@ -4,7 +4,7 @@ from datetime import datetime, timedelta
 from dateutil import parser
 
 # YouTube API Key Input
-API_KEY = st.text_input("Enter your YouTube API Key:", type="password")
+API_KEY = st.text_input("AIzaSyDE7pUZFUQa200OKUvkbEeEQDCtoNgk7-o:", type="password")
 
 # YouTube API Endpoint
 YOUTUBE_API_URL = "https://www.googleapis.com/youtube/v3/videos"
