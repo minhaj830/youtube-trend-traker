@@ -12,6 +12,9 @@ YOUTUBE_API_URL = "https://www.googleapis.com/youtube/v3/videos"
 # Input: Country Code
 country = st.text_input("Enter Country Code (e.g., US, IN, GB):", value="US")
 
+# Timeframe selection
+timeframe = st.selectbox("Select Timeframe:", ["Last 5 minutes", "Last 1 hour", "Last 24 hours"])
+
 # Fetch recent trends
 if st.button("Track YouTube Trends"):
     if not API_KEY:
@@ -23,7 +26,7 @@ if st.button("Track YouTube Trends"):
                 "part": "snippet,statistics",
                 "chart": "mostPopular",
                 "regionCode": country,
-                "maxResults": 25,
+                "maxResults": 50,
                 "key": API_KEY,
             }
 
@@ -35,16 +38,22 @@ if st.button("Track YouTube Trends"):
                 st.error(f"❌ API Error: {data['error']['message']}")
             else:
                 recent_trends = []
-                now = datetime.now(timezone.utc)  # Corrected timezone handling
+                now = datetime.now(timezone.utc)  # timezone-aware current time
 
+                # Define time thresholds
+                time_limits = {
+                    "Last 5 minutes": now - timedelta(minutes=5),
+                    "Last 1 hour": now - timedelta(hours=1),
+                    "Last 24 hours": now - timedelta(hours=24),
+                }
+                selected_limit = time_limits[timeframe]
+
+                # Process video data
                 for item in data.get("items", []):
                     published_at = parser.parse(item["snippet"]["publishedAt"])
 
-                    # Calculate time difference in minutes
-                    time_diff = (now - published_at).total_seconds() / 60
-
-                    # Check if video is published within the last 5 minutes
-                    if time_diff <= 5:
+                    # Check if video was published after the selected limit
+                    if published_at >= selected_limit:
                         recent_trends.append({
                             "title": item["snippet"]["title"],
                             "url": f"https://www.youtube.com/watch?v={item['id']}",
@@ -54,7 +63,7 @@ if st.button("Track YouTube Trends"):
                         })
 
                 if recent_trends:
-                    st.success(f"🚀 Found {len(recent_trends)} trending videos from the last 5 minutes!")
+                    st.success(f"🚀 Found {len(recent_trends)} trending videos in the selected timeframe!")
                     for trend in recent_trends:
                         st.markdown(f"""
                         **🎬 Title:** [{trend['title']}]({trend['url']})  
@@ -64,7 +73,7 @@ if st.button("Track YouTube Trends"):
                         ---
                         """)
                 else:
-                    st.warning("⚠️ No trending videos found from the last 5 minutes.")
+                    st.warning(f"⚠️ No trending videos found for the selected timeframe ({timeframe}).")
                     
         except Exception as e:
             st.error(f"❌ An unexpected error occurred: {e}")
